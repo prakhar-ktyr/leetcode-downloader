@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "LeetCode Downloader",
+  "version": "1.0",
+  "description": "Instantly download LeetCode problems, complete with commented descriptions and starter code in your preferred language.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_title": "Download Problem"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

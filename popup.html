@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSA Problem Downloader</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup-shell">
+    <header class="hero-card">
+      <p class="eyebrow">DSA Problem Downloader</p>
+      <h1 id="problem-title">Loading problem…</h1>
+      <p id="provider-line" class="provider-line">Reading languages from the current tab.</p>
+    </header>
+
+    <section class="panel">
+      <label for="language-select" class="field-label">Language</label>
+      <select id="language-select" class="language-select" disabled>
+        <option>Loading…</option>
+      </select>
+
+      <p id="detected-language" class="detected-language"></p>
+
+      <button id="download-button" class="download-button" disabled>
+        Download Starter File
+      </button>
+
+      <p id="status-text" class="status-text" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>

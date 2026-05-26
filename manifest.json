@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LeetCode Downloader",
-  "version": "1.0",
-  "description": "Instantly download LeetCode problems, complete with commented descriptions and starter code in your preferred language.",
+  "name": "DSA Problem Downloader",
+  "version": "1.1",
+  "description": "Instantly download LeetCode and GeeksforGeeks problems with commented descriptions and starter code in your preferred language.",
   "permissions": ["activeTab", "scripting"],
   "action": {
     "default_title": "Download Problem"

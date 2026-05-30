@@ -1,8 +1,14 @@
 {
   "manifest_version": 3,
   "name": "DSA Problem Downloader",
-  "version": "1.2",
+  "version": "1.2.0",
   "description": "Choose an exact language and download LeetCode or GeeksforGeeks problems with commented descriptions and starter code.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dsa-downloader@prakharkatiyar.com",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": ["activeTab", "scripting"],
   "host_permissions": [
     "https://leetcode.com/*",
@@ -10,9 +16,19 @@
     "https://www.geeksforgeeks.org/*",
     "https://practice.geeksforgeeks.org/*"
   ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "action": {
     "default_title": "Choose Problem Language",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"

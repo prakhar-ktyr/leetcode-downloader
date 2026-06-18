@@ -7,9 +7,13 @@
 
     const extensionMap = {
         java: 'java',
+        java_17: 'java',
         python3: 'py',
         python: 'py',
+        py3: 'py',
+        py3_10: 'py',
         cpp: 'cpp',
+        cpp_11: 'cpp',
         javascript: 'js',
         typescript: 'ts',
         csharp: 'cs',
@@ -19,6 +23,8 @@
     const commentSyntax = {
         python3: ['"""\n', '\n"""\n\n'],
         python: ['"""\n', '\n"""\n\n'],
+        py3: ['"""\n', '\n"""\n\n'],
+        py3_10: ['"""\n', '\n"""\n\n'],
         default: ['/*\n', '\n*/\n\n']
     };
 
@@ -36,7 +42,16 @@
         javascript: ['javascriptnodev22']
     };
 
+    const code360LanguageAliases = {
+        java_17: ['java17', 'java 17', 'jdk17'],
+        py3: ['python3', 'python 3', 'python35', 'python3.5'],
+        py3_10: ['python310', 'python 3.10', 'python3.10'],
+        cpp_11: ['c++11', 'g++11', 'cpp11']
+    };
+
     let cachedLeetCodeQuestion = null;
+    let cachedCode360Problem = null;
+    const cachedCode360LanguageCode = new Map();
 
     function normalizeLanguageToken(value) {
         return String(value || '').toLowerCase().replace(/[^a-z0-9#+]/g, '');
@@ -50,6 +65,7 @@
 
         return (tempDiv.textContent || tempDiv.innerText || '')
             .replace(/\u00a0/g, ' ')
+            .replace(/\t/g, '    ')
             .replace(/\n{3,}/g, '\n\n')
             .trim();
     }
@@ -58,6 +74,33 @@
         const comments = commentSyntax[language] || commentSyntax.default;
         const plainTextDescription = htmlToPlainText(htmlDescription);
         return `${comments[0]}${title}\n\n${plainTextDescription}${comments[1]}`;
+    }
+
+    function isPythonLanguage(language) {
+        return ['python', 'python3', 'py3', 'py3_10'].includes(language);
+    }
+
+    function normalizeLeadingTabs(line, spacesPerTab) {
+        const leadingWhitespace = line.match(/^[\t ]+/)?.[0];
+
+        if (!leadingWhitespace || !leadingWhitespace.includes('\t')) {
+            return line;
+        }
+
+        const normalizedWhitespace = leadingWhitespace.replace(/\t/g, ' '.repeat(spacesPerTab));
+        return `${normalizedWhitespace}${line.slice(leadingWhitespace.length)}`;
+    }
+
+    function normalizeCodeIndentation(code, language) {
+        if (!isPythonLanguage(language)) {
+            return code;
+        }
+
+        return String(code || '')
+            .replace(/\r\n/g, '\n')
+            .split('\n')
+            .map((line) => normalizeLeadingTabs(line, 4))
+            .join('\n');
     }
 
     function downloadTextFile(filename, content) {
@@ -83,6 +126,10 @@
         if (["geeksforgeeks.org", "practice.geeksforgeeks.org"].includes(normalizedHost)
             && window.location.pathname.startsWith('/problems/')) {
             return 'gfg';
+        }
+
+        if (normalizedHost === 'naukri.com' && window.location.pathname.startsWith('/code360/problems/')) {
+            return 'code360';
         }
 
         return null;
@@ -275,8 +322,8 @@
         return extensionMap[language] || 'txt';
     }
 
-    function getProblemSlugFromPath() {
-        return window.location.pathname.split('/').filter(Boolean)[1] || null;
+    function getProblemSlugFromPath(segmentIndex = 1) {
+        return window.location.pathname.split('/').filter(Boolean)[segmentIndex] || null;
     }
 
     async function fetchLeetCodeQuestion() {
@@ -377,7 +424,8 @@
             provider: 'leetcode',
             language: selectedLanguage,
             filename: `${problemSlug}.${getFileExtension(selectedLanguage)}`,
-            content: buildCommentedDescription(question.title, question.content, selectedLanguage) + snippet.code
+            content: buildCommentedDescription(question.title, question.content, selectedLanguage)
+                + normalizeCodeIndentation(snippet.code, selectedLanguage)
         };
     }
 
@@ -484,7 +532,142 @@
             language: selectedLanguage,
             filename: `${problemData.slug || getProblemSlugFromPath()}.${getFileExtension(selectedLanguage)}`,
             content: buildCommentedDescription(problemData.problem_name, problemData.problem_question || '', selectedLanguage)
-                + buildGfgStarterCode(template)
+                + normalizeCodeIndentation(buildGfgStarterCode(template), selectedLanguage)
+        };
+    }
+
+    async function fetchCode360Problem() {
+        const problemSlug = getProblemSlugFromPath(2);
+
+        if (!problemSlug) {
+            throw new Error('Could not find Code360 problem slug in URL');
+        }
+
+        if (cachedCode360Problem && cachedCode360Problem.problemSlug === problemSlug) {
+            return cachedCode360Problem;
+        }
+
+        const response = await fetch(`https://api.codingninjas.com/api/v3/public_section/problem_detail?slug=${encodeURIComponent(problemSlug)}`);
+        const problemResponse = await response.json();
+        const problem = problemResponse?.data?.offerable?.problem;
+
+        if (!response.ok || problemResponse?.status !== 200 || !problem) {
+            throw new Error('Could not fetch Code360 problem details');
+        }
+
+        cachedCode360Problem = { problemSlug, problem };
+        return cachedCode360Problem;
+    }
+
+    function buildCode360Languages(problemLanguages) {
+        return (problemLanguages || []).map((language) => ({
+            value: language.language_token,
+            label: language.name,
+            fileExtension: getFileExtension(language.language_token)
+        }));
+    }
+
+    function getCode360DetectedLanguage(languages) {
+        const languageMap = buildLanguageMap(languages, code360LanguageAliases);
+
+        return detectLanguageFromDom(languageMap)
+            || detectLanguageFromStorage(languageMap, { scanAllLanguageKeys: true });
+    }
+
+    function buildCode360Description(problemData) {
+        return [problemData?.description, problemData?.sample_testcase]
+            .filter(Boolean)
+            .join('\n\n');
+    }
+
+    async function fetchCode360LanguageCode(problemData, selectedLanguage) {
+        const cacheKey = `${problemData.id}:${selectedLanguage}`;
+
+        if (cachedCode360LanguageCode.has(cacheKey)) {
+            return cachedCode360LanguageCode.get(cacheKey);
+        }
+
+        const searchParams = new URLSearchParams({
+            offering_id: String(problemData.offering_id),
+            problem_id: String(problemData.id),
+            language: selectedLanguage
+        });
+        const response = await fetch(`https://api.codingninjas.com/api/v3/public_section/get_language_code?${searchParams.toString()}`);
+        const languageResponse = await response.json();
+        const languageData = languageResponse?.data;
+
+        if (!response.ok || languageResponse?.status !== 200 || !languageData) {
+            throw new Error(`Could not fetch Code360 starter code for language "${selectedLanguage}"`);
+        }
+
+        cachedCode360LanguageCode.set(cacheKey, languageData);
+        return languageData;
+    }
+
+    function getCode360StarterCode(languageData) {
+        return String(
+            languageData?.default_scaffold
+            || languageData?.saved_scaffold
+            || languageData?.runner_scaffold
+            || ''
+        );
+    }
+
+    async function getCode360ProblemInfo() {
+        const { problemSlug, problem } = await fetchCode360Problem();
+        const languages = buildCode360Languages(problem.languages_allowed);
+
+        if (!languages.length) {
+            throw new Error('Could not find Code360 starter code languages');
+        }
+
+        const fallbackLanguage = problem.user_default_language
+            || problem.default_language
+            || languages[0]?.value;
+        const detectedLanguage = getCode360DetectedLanguage(languages);
+        const selectedLanguage = resolveSelectedLanguage(null, detectedLanguage, languages, fallbackLanguage);
+
+        return {
+            provider: 'code360',
+            title: problem.name,
+            slug: problemSlug,
+            languages,
+            detectedLanguage,
+            selectedLanguage
+        };
+    }
+
+    async function buildCode360Download(requestedLanguage) {
+        const { problemSlug, problem } = await fetchCode360Problem();
+        const languages = buildCode360Languages(problem.languages_allowed);
+
+        if (!languages.length) {
+            throw new Error('Could not find Code360 starter code languages');
+        }
+
+        const fallbackLanguage = problem.user_default_language
+            || problem.default_language
+            || languages[0]?.value;
+        const detectedLanguage = getCode360DetectedLanguage(languages);
+        const selectedLanguage = resolveSelectedLanguage(
+            requestedLanguage,
+            detectedLanguage,
+            languages,
+            fallbackLanguage
+        );
+        const languageData = await fetchCode360LanguageCode(problem, selectedLanguage);
+        const starterCode = getCode360StarterCode(languageData);
+
+        if (!starterCode) {
+            throw new Error(`Code snippet not found for Code360 language "${selectedLanguage}"`);
+        }
+
+        return {
+            provider: 'code360',
+            language: selectedLanguage,
+            filename: `${problemSlug}.${getFileExtension(selectedLanguage)}`,
+            content: buildCommentedDescription(problem.name, buildCode360Description(problem), selectedLanguage)
+                + normalizeCodeIndentation(starterCode, selectedLanguage)
         };
     }
 
@@ -497,6 +680,10 @@
 
         if (provider === 'gfg') {
             return getGfgProblemInfo();
+        }
+
+        if (provider === 'code360') {
+            return getCode360ProblemInfo();
         }
 
         throw new Error('Unsupported problem page');
@@ -513,6 +700,12 @@
 
         if (provider === 'gfg') {
             const downloadData = buildGfgDownload(requestedLanguage);
+            downloadTextFile(downloadData.filename, downloadData.content);
+            return downloadData;
+        }
+
+        if (provider === 'code360') {
+            const downloadData = await buildCode360Download(requestedLanguage);
             downloadTextFile(downloadData.filename, downloadData.content);
             return downloadData;
         }

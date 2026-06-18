@@ -6,8 +6,10 @@ function isSupportedProblemPage(url) {
     const isLeetCodeProblem = normalizedHost === "leetcode.com" && pathname.startsWith("/problems/");
     const isGfgProblem = ["geeksforgeeks.org", "practice.geeksforgeeks.org"].includes(normalizedHost)
       && pathname.startsWith("/problems/");
+    const isCode360Problem = normalizedHost === "naukri.com"
+      && pathname.startsWith("/code360/problems/");
 
-    return isLeetCodeProblem || isGfgProblem;
+    return isLeetCodeProblem || isGfgProblem || isCode360Problem;
   } catch (error) {
     console.error("Invalid tab URL:", error);
     return false;

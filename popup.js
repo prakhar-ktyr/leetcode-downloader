@@ -7,6 +7,11 @@ const statusText = document.getElementById('status-text');
 
 let activeTabId = null;
 let activeProblem = null;
+const providerLabels = {
+    leetcode: 'LeetCode',
+    gfg: 'GeeksforGeeks',
+    code360: 'Code360'
+};
 
 function setStatus(message, tone = 'neutral') {
     statusText.textContent = message;
@@ -28,7 +33,7 @@ function renderUnsupportedState(message) {
     activeProblem = null;
     problemTitle.textContent = 'Open a supported problem page';
     providerLine.textContent = message;
-    detectedLanguage.textContent = 'This popup works on LeetCode and GeeksforGeeks problem pages.';
+    detectedLanguage.textContent = 'This popup works on LeetCode, GeeksforGeeks, and Code360 problem pages.';
     languageSelect.innerHTML = '<option>Unsupported page</option>';
     setInteractiveState(false);
 }
@@ -50,7 +55,7 @@ function populateLanguageSelect(problem) {
 
 function renderProblem(problem) {
     activeProblem = problem;
-    const providerLabel = problem.provider === 'leetcode' ? 'LeetCode' : 'GeeksforGeeks';
+    const providerLabel = providerLabels[problem.provider] || problem.provider;
     const languageCountLabel = `${problem.languages.length} language${problem.languages.length === 1 ? '' : 's'} available`;
 
     problemTitle.textContent = problem.title;

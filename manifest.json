@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "DSA Problem Downloader",
-  "version": "1.2.0",
-  "description": "Choose an exact language and download LeetCode or GeeksforGeeks problems with commented descriptions and starter code.",
+  "version": "1.3.0",
+  "description": "Choose an exact language and download LeetCode, GeeksforGeeks, or Code360 problems with commented descriptions and starter code.",
   "browser_specific_settings": {
     "gecko": {
       "id": "dsa-downloader@prakharkatiyar.com",
@@ -14,7 +14,8 @@
     "https://leetcode.com/*",
     "https://geeksforgeeks.org/*",
     "https://www.geeksforgeeks.org/*",
-    "https://practice.geeksforgeeks.org/*"
+    "https://practice.geeksforgeeks.org/*",
+    "https://www.naukri.com/*"
   ],
   "icons": {
     "16": "icons/icon-16.png",

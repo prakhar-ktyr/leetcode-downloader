@@ -1,6 +1,6 @@
 # Privacy Policy for DSA Problem Downloader
 
-**Last updated:** 2026-05-30
+**Last updated:** 2026-06-18
 
 ## What Data We Collect
 
@@ -8,11 +8,13 @@ DSA Problem Downloader does **not** collect, store, or transmit any personal dat
 
 ## How the Extension Works
 
-When you click the extension icon on a supported problem page (LeetCode or GeeksforGeeks), the extension reads the problem title, description, and starter code from the page's existing structured data. This data is used solely to generate a downloadable file on your device. No data leaves your browser.
+When you click the extension icon on a supported problem page (LeetCode, GeeksforGeeks, or Code360), the extension reads the problem title, description, and starter code from the page's existing structured data or first-party problem APIs used by that platform. This data is used solely to generate a downloadable file on your device.
+
+For LeetCode and Code360, the extension issues first-party requests to the platform's own problem-data endpoints to retrieve the structured description and starter code for the currently open problem. These requests are limited to the problem you explicitly open and do not send your downloaded files to the developer or any third-party service.
 
 ## Third-Party Services
 
-This extension does not use any third-party services, analytics, cookies, or tracking mechanisms.
+This extension does not use any third-party analytics, cookies, or tracking mechanisms. It only communicates with the first-party problem endpoints required to retrieve the current problem data from supported sites.
 
 ## Data Storage
 

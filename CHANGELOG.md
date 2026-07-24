@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.1] - 2026-07-24
+
+- Fixed superscript/subscript rendering in downloaded problem descriptions. HTML `<sup>` and `<sub>` tags (e.g., `2<sup>31</sup>`) are now converted to readable `^(...)` and `_(...)` notation instead of being silently dropped.
+
 ## [1.3.0] - 2026-06-18
 
 - Added Code360 problem support for `www.naukri.com/code360/problems/...` pages.

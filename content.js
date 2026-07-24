@@ -60,6 +60,8 @@
     function htmlToPlainText(html) {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = String(html || '')
+            .replace(/<sup\b[^>]*>(.*?)<\/sup>/gi, '^($1)')
+            .replace(/<sub\b[^>]*>(.*?)<\/sub>/gi, '_($1)')
             .replace(/<br\s*\/?>/gi, '\n')
             .replace(/<\/(p|div|li|tr|h1|h2|h3|h4|h5|h6)>/gi, '$&\n');
 

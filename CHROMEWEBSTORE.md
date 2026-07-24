@@ -39,7 +39,7 @@ PERMISSIONS
 SUPPORT
 Found a bug? Have a suggestion? Open an issue at https://github.com/prakhar-ktyr/leetcode-downloader/issues
 
-Version 1.3 — Added Code360 support and normalized Python indentation in downloaded `.py` files.
+Version 1.3.1 — Fixed exponent/subscript rendering in downloaded problem descriptions.
 
 **Category** [REQUIRED]
 Developer Tools
@@ -138,7 +138,8 @@ https://github.com/prakhar-ktyr/leetcode-downloader
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 1.3 | 2026-06-18 | Added Code360 support and normalized Python indentation in downloaded `.py` files | Ready |
+| 1.3.1 | 2026-07-24 | Fixed superscript/subscript rendering in problem descriptions | Ready |
+| 1.3 | 2026-06-18 | Added Code360 support and normalized Python indentation in downloaded `.py` files | Released |
 | 1.2 | 2026-05-30 | Added GeeksforGeeks support, improved language detection | Draft |
 | 1.0 | — | Initial release with LeetCode support | — |
 

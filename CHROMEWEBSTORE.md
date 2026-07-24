@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — DSA Problem Downloader
 
-> Last Updated: 2026-06-18
+> Last Updated: 2026-07-24
 
 ## Store Listing
 

@@ -1,0 +1,80 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build ZIP
+        run: |
+          EXTENSION_NAME="dsa-problem-downloader"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          OUTPUT="${EXTENSION_NAME}-v${VERSION}.zip"
+
+          zip -r "$OUTPUT" . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "node_modules/*" \
+            -x ".env" \
+            -x "*.map" \
+            -x "tests/*" \
+            -x "__tests__/*" \
+            -x "*.test.*" \
+            -x "*.spec.*" \
+            -x ".eslintrc*" \
+            -x ".prettierrc*" \
+            -x "tsconfig.json" \
+            -x "package.json" \
+            -x "package-lock.json" \
+            -x "CHROMEWEBSTORE.md" \
+            -x "PRIVACY.md" \
+            -x "README.md" \
+            -x "CHANGELOG.md" \
+            -x "LICENSE" \
+            -x ".gitignore" \
+            -x ".DS_Store" \
+            -x "Thumbs.db" \
+            -x "*.sh" \
+            -x "store-assets/*" \
+            -x "dsa-problem-downloader-*.zip"
+
+          echo "ZIP_FILE=$OUTPUT" >> "$GITHUB_ENV"
+          echo "✅ Packaged: $OUTPUT ($(du -h "$OUTPUT" | cut -f1))"
+
+      - name: Verify ZIP contents
+        run: unzip -l "$ZIP_FILE"
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          # Extract the changelog section for this version
+          NOTES=$(awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{if(found) exit} found" CHANGELOG.md)
+          # Write to file to handle multiline
+          echo "$NOTES" > release_notes.txt
+          echo "Generated release notes for v${VERSION}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ steps.version.outputs.VERSION }}"
+          body_path: release_notes.txt
+          files: ${{ env.ZIP_FILE }}
+          draft: false
+          prerelease: false

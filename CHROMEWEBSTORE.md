@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — DSA Problem Downloader
 
-> Last Updated: 2026-07-24
+> Last Updated: 2026-08-11
 
 ## Store Listing
 
@@ -8,21 +8,21 @@
 DSA Problem Downloader
 
 **Short Description** [REQUIRED]
-Download LeetCode, GeeksforGeeks, and Code360 problems as starter code files in any available language.
+Download LeetCode, GeeksforGeeks, Code360, and InterviewBit problems as starter code files in any available language.
 
 **Detailed Description** [REQUIRED]
-DSA Problem Downloader lets you download LeetCode, GeeksforGeeks, and Code360 problems as ready-to-code starter files — complete with the problem description as comments and the exact starter code in your chosen language.
+DSA Problem Downloader lets you download LeetCode, GeeksforGeeks, Code360, and InterviewBit problems as ready-to-code starter files — complete with the problem description as comments and the exact starter code in your chosen language.
 
 FEATURES
-• Multi-platform support — works on LeetCode, GeeksforGeeks, and Code360 problem pages
+• Multi-platform support — works on LeetCode, GeeksforGeeks, Code360, and InterviewBit problem pages
 • Exact language selector — choose from every language the problem supports, not just the one shown on the page
 • Smart auto-detection — preselects the language currently displayed on the page, with manual override
-• Structured data extraction — reads LeetCode's GraphQL API, GeeksforGeeks' embedded page state, and Code360's public problem APIs instead of fragile DOM scraping
+• Structured data extraction — reads LeetCode's GraphQL API, GeeksforGeeks' embedded page state, Code360's public problem APIs, and InterviewBit's page state and first-party problem-code API instead of fragile DOM scraping
 • Smart commenting — wraps the problem description in the correct comment syntax for your chosen language
 • Clean file naming — saves the starter file with a descriptive filename and correct extension
 
 HOW TO USE
-1. Open any problem page on LeetCode, GeeksforGeeks, or Code360
+1. Open any problem page on LeetCode, GeeksforGeeks, Code360, or InterviewBit
 2. Click the DSA Problem Downloader icon in the toolbar
 3. Pick the language you want from the dropdown
 4. Click "Download Starter File"
@@ -39,13 +39,13 @@ PERMISSIONS
 SUPPORT
 Found a bug? Have a suggestion? Open an issue at https://github.com/prakhar-ktyr/leetcode-downloader/issues
 
-Version 1.3.1 — Fixed exponent/subscript rendering in downloaded problem descriptions.
+Version 1.4.0 — Added InterviewBit support with API-based language selection.
 
 **Category** [REQUIRED]
 Developer Tools
 
 **Single Purpose** [REQUIRED]
-Downloads LeetCode, GeeksforGeeks, and Code360 coding problems as starter code files in the user's chosen programming language.
+Downloads LeetCode, GeeksforGeeks, Code360, and InterviewBit coding problems as starter code files in the user's chosen programming language.
 
 **Primary Language** [REQUIRED]
 English
@@ -78,6 +78,7 @@ English
 | `https://www.geeksforgeeks.org/*` | host_permissions | GeeksforGeeks uses the www subdomain; this covers pages served from www.geeksforgeeks.org. |
 | `https://practice.geeksforgeeks.org/*` | host_permissions | GeeksforGeeks problem pages are also served from the practice subdomain. |
 | `https://www.naukri.com/*` | host_permissions | The content script activates on Code360 problem pages served from the Naukri domain and reads the currently open problem context before requesting the corresponding public starter-code payload. |
+| `https://www.interviewbit.com/*` | host_permissions | The content script reads InterviewBit problem data from the page's global state and Monaco editor via a CSP-safe injected script (`inject.js`). The extension also calls InterviewBit's first-party `/v2/problems/.../codes/` endpoint to fetch starter code for the user's selected language. |
 
 
 ## Privacy & Data Use
@@ -138,7 +139,8 @@ https://github.com/prakhar-ktyr/leetcode-downloader
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 1.3.1 | 2026-07-24 | Fixed superscript/subscript rendering in problem descriptions | Ready |
+| 1.4.0 | 2026-08-11 | Added InterviewBit support with API-based language selection | Ready |
+| 1.3.1 | 2026-07-24 | Fixed superscript/subscript rendering in problem descriptions | Released |
 | 1.3 | 2026-06-18 | Added Code360 support and normalized Python indentation in downloaded `.py` files | Released |
 | 1.2 | 2026-05-30 | Added GeeksforGeeks support, improved language detection | Draft |
 | 1.0 | — | Initial release with LeetCode support | — |

@@ -10,7 +10,8 @@ let activeProblem = null;
 const providerLabels = {
     leetcode: 'LeetCode',
     gfg: 'GeeksforGeeks',
-    code360: 'Code360'
+    code360: 'Code360',
+    interviewbit: 'InterviewBit'
 };
 
 function setStatus(message, tone = 'neutral') {
@@ -33,7 +34,7 @@ function renderUnsupportedState(message) {
     activeProblem = null;
     problemTitle.textContent = 'Open a supported problem page';
     providerLine.textContent = message;
-    detectedLanguage.textContent = 'This popup works on LeetCode, GeeksforGeeks, and Code360 problem pages.';
+    detectedLanguage.textContent = 'This popup works on LeetCode, GeeksforGeeks, Code360, and InterviewBit problem pages.';
     languageSelect.innerHTML = '<option>Unsupported page</option>';
     setInteractiveState(false);
 }

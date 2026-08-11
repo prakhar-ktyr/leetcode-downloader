@@ -25,6 +25,7 @@
         python: ['"""\n', '\n"""\n\n'],
         py3: ['"""\n', '\n"""\n\n'],
         py3_10: ['"""\n', '\n"""\n\n'],
+        ruby: ['=begin\n', '\n=end\n\n'],
         default: ['/*\n', '\n*/\n\n']
     };
 
@@ -49,6 +50,25 @@
         cpp_11: ['c++11', 'g++11', 'cpp11']
     };
 
+    const interviewBitFileExtensions = {
+        python: 'py',
+        python3: 'py',
+        c: 'c',
+        cpp: 'cpp',
+        csharp: 'cs',
+        java: 'java',
+        javascript: 'js',
+        typescript: 'ts',
+        golang: 'go',
+        ruby: 'rb',
+        php: 'php',
+        scala: 'scala',
+        swift: 'swift',
+        objectivec: 'm'
+    };
+
+    let cachedInterviewBitProblemData = null;
+
     let cachedLeetCodeQuestion = null;
     let cachedCode360Problem = null;
     const cachedCode360LanguageCode = new Map();
@@ -60,8 +80,8 @@
     function htmlToPlainText(html) {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = String(html || '')
-            .replace(/<sup\b[^>]*>(.*?)<\/sup>/gi, '^($1)')
-            .replace(/<sub\b[^>]*>(.*?)<\/sub>/gi, '_($1)')
+            .replace(/<sup\b[^>]*>([\s\S]*?)<\/sup>/gi, (_, inner) => `^(${inner.replace(/<[^>]*>/g, '').trim()})`)
+            .replace(/<sub\b[^>]*>([\s\S]*?)<\/sub>/gi, (_, inner) => `_(${inner.replace(/<[^>]*>/g, '').trim()})`)
             .replace(/<br\s*\/?>/gi, '\n')
             .replace(/<\/(p|div|li|tr|h1|h2|h3|h4|h5|h6)>/gi, '$&\n');
 
@@ -132,6 +152,10 @@
 
         if (normalizedHost === 'naukri.com' && window.location.pathname.startsWith('/code360/problems/')) {
             return 'code360';
+        }
+
+        if (normalizedHost === 'interviewbit.com' && window.location.pathname.startsWith('/problems/')) {
+            return 'interviewbit';
         }
 
         return null;
@@ -673,6 +697,183 @@
         };
     }
 
+    function parseInterviewBitLanguageType(label) {
+        const lower = label.toLowerCase();
+        if (/python\s*3/i.test(lower)) return 'python3';
+        if (/python/i.test(lower)) return 'python';
+        if (/c\+\+|cpp/i.test(lower)) return 'cpp';
+        if (/c#/i.test(lower)) return 'csharp';
+        if (/^c[\s(]/i.test(lower) || lower === 'c') return 'c';
+        if (/javascript/i.test(lower)) return 'javascript';
+        if (/typescript/i.test(lower)) return 'typescript';
+        if (/\bgo\b/i.test(lower)) return 'golang';
+        if (/java/i.test(lower)) return 'java';
+        if (/ruby/i.test(lower)) return 'ruby';
+        if (/php/i.test(lower)) return 'php';
+        if (/scala/i.test(lower)) return 'scala';
+        if (/swift/i.test(lower)) return 'swift';
+        if (/objective.?c/i.test(lower)) return 'objectivec';
+        return 'unknown';
+    }
+
+    function extractInterviewBitPageData() {
+        return new Promise((resolve, reject) => {
+            const listener = (event) => {
+                if (event.source !== window) return;
+                if (event.data?.type === 'DSA_DOWNLOADER_EXTRACT_SUCCESS') {
+                    window.removeEventListener('message', listener);
+                    resolve(event.data.data);
+                } else if (event.data?.type === 'DSA_DOWNLOADER_EXTRACT_ERROR') {
+                    window.removeEventListener('message', listener);
+                    reject(new Error(event.data.error));
+                }
+            };
+            window.addEventListener('message', listener);
+
+            const script = document.createElement('script');
+            script.src = chrome.runtime.getURL('inject.js');
+            script.onload = () => script.remove();
+            script.onerror = () => {
+                window.removeEventListener('message', listener);
+                reject(new Error('Failed to inject script'));
+            };
+            (document.head || document.documentElement).appendChild(script);
+
+            setTimeout(() => {
+                window.removeEventListener('message', listener);
+                reject(new Error('Timeout extracting InterviewBit page data'));
+            }, 5000);
+        });
+    }
+
+    async function getInterviewBitProblemData() {
+        if (cachedInterviewBitProblemData) {
+            return cachedInterviewBitProblemData;
+        }
+
+        const pageData = await extractInterviewBitPageData();
+
+        if (!pageData.problemsData) {
+            throw new Error('Could not find InterviewBit problem data. Make sure you are logged in.');
+        }
+
+        const data = JSON.parse(pageData.problemsData);
+
+        if (!data?.meta) {
+            throw new Error('Could not find InterviewBit problem details');
+        }
+
+        cachedInterviewBitProblemData = data;
+        return data;
+    }
+
+    function buildInterviewBitLanguages(languagesMap) {
+        return Object.entries(languagesMap || {}).map(([id, label]) => {
+            const langType = parseInterviewBitLanguageType(label);
+            return {
+                value: id,
+                label,
+                langType,
+                fileExtension: interviewBitFileExtensions[langType] || 'txt'
+            };
+        });
+    }
+
+    function getInterviewBitDetectedLanguage(languages) {
+        const dropdownValue = document.querySelector('.p-editor-toolbar-dropdown__single-value');
+        if (!dropdownValue) return null;
+
+        const dropdownText = dropdownValue.textContent?.trim();
+        if (!dropdownText) return null;
+
+        const match = languages.find((lang) => lang.label === dropdownText);
+        return match?.value || null;
+    }
+
+    function getInterviewBitDescription(problemData) {
+        const domDescription = document.querySelector('.p-html-content.p-statement')?.innerHTML;
+        return domDescription || problemData.meta?.markdown_content || '';
+    }
+
+    async function getInterviewBitProblemInfo() {
+        const problemData = await getInterviewBitProblemData();
+        const languages = buildInterviewBitLanguages(problemData.meta.languages);
+
+        if (!languages.length) {
+            throw new Error('Could not find InterviewBit starter code languages');
+        }
+
+        const detectedLanguage = getInterviewBitDetectedLanguage(languages);
+        const selectedLanguage = resolveSelectedLanguage(null, detectedLanguage, languages, languages[0]?.value);
+
+        return {
+            provider: 'interviewbit',
+            title: problemData.meta.statement,
+            slug: problemData.slug,
+            languages,
+            detectedLanguage,
+            selectedLanguage
+        };
+    }
+
+    async function fetchInterviewBitStarterCode(problemSlug, languageId) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const response = await fetch(`/v2/problems/${problemSlug}/codes/?programming_language_id=${languageId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-Token': csrfToken || '',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data.content;
+        }
+        throw new Error("Failed to fetch InterviewBit starter code");
+    }
+
+    async function buildInterviewBitDownload(requestedLanguage) {
+        const problemData = await getInterviewBitProblemData();
+        const languages = buildInterviewBitLanguages(problemData.meta.languages);
+
+        if (!languages.length) {
+            throw new Error('Could not find InterviewBit starter code languages');
+        }
+
+        const detectedLanguage = getInterviewBitDetectedLanguage(languages);
+        const selectedLanguage = resolveSelectedLanguage(
+            requestedLanguage,
+            detectedLanguage,
+            languages,
+            languages[0]?.value
+        );
+
+        let editorContent = null;
+        if (detectedLanguage && selectedLanguage === detectedLanguage) {
+            const pageData = await extractInterviewBitPageData();
+            editorContent = pageData.editorContent;
+        } else {
+            editorContent = await fetchInterviewBitStarterCode(problemData.slug, selectedLanguage);
+        }
+
+        if (!editorContent) {
+            throw new Error('Could not read the InterviewBit code editor or fetch starter code. Make sure you are logged in.');
+        }
+
+        const selectedLang = languages.find((l) => l.value === selectedLanguage) || languages[0];
+        const langType = selectedLang?.langType || 'default';
+        const description = getInterviewBitDescription(problemData);
+
+        return {
+            provider: 'interviewbit',
+            language: selectedLanguage,
+            filename: problemData.slug + '.' + (selectedLang?.fileExtension || 'txt'),
+            content: buildCommentedDescription(problemData.meta.statement, description, langType)
+                + normalizeCodeIndentation(editorContent, langType)
+        };
+    }
+
     async function getProblemInfo() {
         const provider = getProvider();
 
@@ -686,6 +887,10 @@
 
         if (provider === 'code360') {
             return getCode360ProblemInfo();
+        }
+
+        if (provider === 'interviewbit') {
+            return getInterviewBitProblemInfo();
         }
 
         throw new Error('Unsupported problem page');
@@ -708,6 +913,12 @@
 
         if (provider === 'code360') {
             const downloadData = await buildCode360Download(requestedLanguage);
+            downloadTextFile(downloadData.filename, downloadData.content);
+            return downloadData;
+        }
+
+        if (provider === 'interviewbit') {
+            const downloadData = await buildInterviewBitDownload(requestedLanguage);
             downloadTextFile(downloadData.filename, downloadData.content);
             return downloadData;
         }
